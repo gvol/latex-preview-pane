@@ -232,32 +232,27 @@
 
 
 ;;;###autoload
-(defun latex-preview-pane-update-p () 
-(if (eq (call-process pdf-latex-command nil "*pdflatex-buffer*" nil buffer-file-name) 1)
-    ;; TODO: highlight errors 
-    (progn
-      (lpp/display-backtrace)
-      (remove-overlays)
-      (lpp/line-errors-to-layovers (lpp/line-errors))
-      )
-  
-  (let ((pdf-filename (replace-regexp-in-string "\.tex$" ".pdf" buffer-file-name))
-	(tex-buff (current-buffer))
-	(pdf-buff (replace-regexp-in-string "\.tex$" ".pdf" (buffer-name))))
-    (remove-overlays)
-    ;; if the file doesn't exist, say that the file isn't available due to error messages
-    (if (file-exists-p pdf-filename)
+(defun latex-preview-pane-update-p ()
+  (if (eq (call-process pdf-latex-command nil "*pdflatex-buffer*" nil buffer-file-name) 1)
+      ;; TODO: highlight errors
+      (progn
+        (lpp/display-backtrace)
+        (remove-overlays (point-min) (point-max) 'face 'bad-face)
+        (lpp/line-errors-to-layovers (lpp/line-errors)))
+
+    (let ((pdf-filename (replace-regexp-in-string "\.tex$" ".pdf" buffer-file-name))
+          (tex-buff (current-buffer))
+          (pdf-buff (replace-regexp-in-string "\.tex$" ".pdf" (buffer-name))))
+      (remove-overlays (point-min) (point-max) 'face 'bad-face)
+      ;; if the file doesn't exist, say that the file isn't available due to error messages
+      (if (file-exists-p pdf-filename)
 	  (if (eq (get-buffer pdf-buff) nil)
 	      (set-window-buffer (lpp/window-containing-preview) (find-file-noselect pdf-filename))
-	    (progn 
-	      (set-window-buffer (lpp/window-containing-preview) pdf-buff) 
+	    (progn
+	      (set-window-buffer (lpp/window-containing-preview) pdf-buff)
 	      (switch-to-buffer-other-window pdf-buff)
 	      (doc-view-revert-buffer nil t)
-	      (switch-to-buffer-other-window tex-buff) 
-	      ))
-	
-      ))))
-
+	      (switch-to-buffer-other-window tex-buff)))))))
 ;;
 ;; Mode definition
 ;;
